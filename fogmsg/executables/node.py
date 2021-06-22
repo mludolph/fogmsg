@@ -6,6 +6,8 @@ sys.path.append(path.join(path.dirname(__file__), "..", ".."))
 
 from fogmsg.components import Node  # noqa
 from fogmsg.components.sensor import MockSensor  # noqa
+import fogmsg.utils as utils  # noqa
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="fogmsg Node")
@@ -39,7 +41,25 @@ if __name__ == "__main__":
         default="tcp://localhost:4001",
     )
 
+    parser.add_argument(
+        "--log-level",
+        type=str,
+        dest="log_level",
+        choices=["debug", "info", "warn", "critical"],
+        help="the log-level (default: info)",
+        default="info",
+    )
+    parser.add_argument(
+        "--log-file",
+        dest="log_file",
+        type=str,
+        help="the path to the log file, default is to write to console",
+        default="",
+    )
     args = parser.parse_args()
+
+    setattr(utils.logger, "LOGLEVEL", args.log_level)
+    setattr(utils.logger, "LOGFILE", args.log_file)
 
     sensor = MockSensor()
     node = Node(

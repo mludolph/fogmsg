@@ -1,4 +1,3 @@
-import logging
 import threading
 import time
 from collections import deque
@@ -13,7 +12,7 @@ from zmq import Context
 class NodeSender(threading.Thread):
     def __init__(self, advertised_hostname: str, ctx: Context = None):
         threading.Thread.__init__(self)
-        self.logger = configure_logger(logging.getLogger(f"({advertised_hostname})"))
+        self.logger = configure_logger(f"sender({advertised_hostname})")
 
         self.advertised_hostname = advertised_hostname
 
@@ -22,28 +21,37 @@ class NodeSender(threading.Thread):
         self.running = threading.Event()
         self.running.set()
 
-        ctx = ctx or Context.instance()
-        self.socket = ctx.socket(zmq.REQ)
-        self.socket.connect(self.advertised_hostname)
-        self.logger.info("connected")
+        self.ctx = ctx or Context.instance()
+        self.socket = None
 
     def enqueue(self, msg):
-        self.logger.info("enqueuing message")
+        self.logger.debug("enqueuing message")
         self.msg_queue.append(msg)
 
     def join(self, timeout=None):
-        self.logger.info("joining...")
+        self.logger.debug("joining...")
         self.running.clear()
         threading.Thread.join(self, timeout)
+
+        self.socket.setsockopt(zmq.LINGER, 0)
         self.socket.close()
-        self.logger.info("joined!")
+
+        self.logger.info("closed connection (hostname={self.advertised_hostname}")
 
     def reconnect(self):
+        if self.socket:
+            self.socket.setsockopt(zmq.LINGER, 0)
+            self.socket.close()
+
+        self.socket = self.ctx.socket(zmq.REQ)
         self.socket.connect(self.advertised_hostname)
+        self.logger.info(
+            f"connecting to node receiver (hostname={self.advertised_hostname})"
+        )
 
     def try_send_messages(self) -> bool:
         while len(self.msg_queue) > 0:
-            self.logger.info(f"message queue: {len(self.msg_queue)}")
+            self.logger.debug(f"message queue: {len(self.msg_queue)}")
             msg = self.msg_queue[-1]
             try:
                 self._send_message(msg)
@@ -54,24 +62,25 @@ class NodeSender(threading.Thread):
         return True
 
     def _send_message(self, msg, timeout=1000):
-        self.logger.info("sending message...")
+        self.logger.debug("sending message...")
         try:
             self.socket.send_json(msg, zmq.NOBLOCK)
         except zmq.error.Again:
-            self.logger.critical("could not reach host!")
+            self.logger.warn("could not reach host!")
             raise TimeoutError
 
         if self.socket.poll(timeout) == 0:
-            self.logger.critical("sending of message timed out!")
+            self.logger.warn("sending of message timed out!")
             raise TimeoutError
 
         msg = self.socket.recv_json()
         if msg != "ack":
-            self.logger.critical("message was not ack'ed")
+            self.logger.warn("message was not ack'ed")
             raise NoAcknowledgementError
 
     def run(self):
-        self.logger.info("started")
+        self.logger.info("started node sender")
+        self.reconnect()
 
         while self.running.is_set():
             self.try_send_messages()
@@ -80,7 +89,7 @@ class NodeSender(threading.Thread):
 
 class Master:
     def __init__(self, hostname: str = "0.0.0.0", port: int = 4000):
-        self.logger = configure_logger(logging.getLogger("master"))
+        self.logger = configure_logger("master")
         self.ctx = Context.instance()
         self.hostname = hostname
         self.port = port
@@ -94,6 +103,10 @@ class Master:
         with self.nodes_lock:
             self.logger.info(f"registering node ({advertised_hostname})")
 
+            if advertised_hostname in self.nodes:
+                self.logger.warn(f"node ({advertised_hostname}) already registered")
+                return
+
             self.nodes[advertised_hostname] = NodeSender(advertised_hostname, ctx)
             self.nodes[advertised_hostname].start()
 
@@ -106,21 +119,24 @@ class Master:
 
     def send_to_all(self, msg, exclude=None):
         with self.nodes_lock:
-            self.logger.info("sending message to all nodes...")
+            self.logger.debug("sending message to all nodes...")
 
             for advertised_hostname, sender in self.nodes.items():
                 if not exclude or advertised_hostname not in exclude:
                     sender.enqueue(msg)
 
     def join(self):
+        self.logger.debug("shutting down master...")
         self.socket.close()
         self.running = False
         with self.nodes_lock:
             for sender in self.nodes:
                 sender.join()
 
+        self.logger.debug("master shut down")
+
     def run(self):
-        self.logger.info("starting fogmsg master...")
+        self.logger.debug("starting fogmsg master...")
 
         self.socket = self.ctx.socket(zmq.REP)
         self.socket.bind(f"tcp://{self.hostname}:{self.port}")

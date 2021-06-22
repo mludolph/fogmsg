@@ -1,4 +1,3 @@
-import logging
 import threading
 import time
 from collections import deque
@@ -6,7 +5,7 @@ from pprint import PrettyPrinter
 
 import zmq
 from fogmsg.components.errors import NoAcknowledgementError
-from fogmsg.components.sensor import MockSensor, Sensor
+from fogmsg.components.sensor import Sensor
 from fogmsg.utils.logger import configure_logger
 from zmq import Context
 
@@ -14,7 +13,7 @@ from zmq import Context
 class NodeReceiver(threading.Thread):
     def __init__(self, hostname: str, port: int, ctx: Context = None):
         threading.Thread.__init__(self)
-        self.logger = configure_logger(logging.getLogger("receiver"))
+        self.logger = configure_logger("receiver")
         self.pp = PrettyPrinter(indent=4)
         self.hostname = hostname
         self.port = port
@@ -24,20 +23,25 @@ class NodeReceiver(threading.Thread):
 
         ctx = ctx or Context.instance()
         self.socket = ctx.socket(zmq.REP)
-        self.socket.bind(f"tcp://{hostname}:{port}")
-        self.logger.info(f"started node receiver (hostname={hostname}, port={port})")
 
     def join(self, timeout=None):
-        self.logger.info(
-            f"shutting down receiver (hostname={self.hostname}, port={self.port})..."
-        )
-
+        self.logger.debug("joining...")
         self.running.clear()
         threading.Thread.join(self, timeout)
+
+        self.socket.setsockopt(zmq.LINGER, 0)
         self.socket.close()
-        self.logger.info("joined!")
+
+        self.logger.info(
+            f"node receiver shut down (hostname={self.hostname}, port={self.port})"
+        )
 
     def run(self):
+        self.socket.bind(f"tcp://{self.hostname}:{self.port}")
+        self.logger.info(
+            f"started node receiver (hostname={self.hostname}, port={self.port})"
+        )
+
         while self.running.is_set():
             if self.socket.poll(1000) == 0:
                 continue
@@ -45,7 +49,7 @@ class NodeReceiver(threading.Thread):
             msg = self.socket.recv_json()
             self.socket.send_json("ack")
             if msg["cmd"] == "publish":
-                self.logger.info(f"received messsage from {msg['origin']}:")
+                self.logger.info(f"messsage from {msg['origin']}:")
                 self.pp.pprint(msg)
 
 
@@ -58,7 +62,7 @@ class Node:
         advertised_hostname: str = "tcp://localhost:4001",
         master_hostname: str = "tcp://localhost:4000",
     ):
-        self.logger = configure_logger(logging.getLogger("node"))
+        self.logger = configure_logger("node")
         self.ctx = Context.instance()
 
         self.hostname = hostname
@@ -71,7 +75,7 @@ class Node:
 
         self.running = False
 
-        self.sensor = MockSensor()
+        self.sensor = sensor
 
     def reconnect(self):
         if self.master:
@@ -83,7 +87,7 @@ class Node:
         self.logger.info(f"connecting to master (hostname={self.master_hostname})")
 
     def try_send_messages(self) -> bool:
-        self.logger.info(f"message queue: {len(self.msg_queue)}")
+        self.logger.debug(f"message queue: {len(self.msg_queue)}")
         while len(self.msg_queue) > 0:
             msg = self.msg_queue[-1]
             try:
@@ -95,20 +99,20 @@ class Node:
         return True
 
     def _send_message(self, msg):
-        self.logger.info("sending message...")
+        self.logger.debug("sending message...")
         try:
             self.master.send_json(msg, zmq.NOBLOCK)
         except zmq.error.Again:
-            self.logger.critical("could not reach host!")
+            self.logger.warn("could not reach host!")
             raise TimeoutError
 
         if self.master.poll(1000) == 0:
-            self.logger.critical("sending of message timed out!")
+            self.logger.warn("sending of message timed out!")
             raise TimeoutError
 
         msg = self.master.recv_json()
         if msg != "ack":
-            self.logger.critical("message was not ack'ed")
+            self.logger.warn("message was not ack'ed")
             raise NoAcknowledgementError
 
     def join(self):
@@ -140,7 +144,7 @@ class Node:
         while not self.try_send_messages():
             time.sleep(0.5)
 
-        self.logger.info("node is registered and healthy")
+        self.logger.info("registered and started node")
 
         while self.running:
             payload = self.sensor.get_reading()

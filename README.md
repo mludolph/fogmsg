@@ -12,7 +12,7 @@
 
 ```bash
 $ python fogmsg/executables/master.py --help
-usage: master.py [-h] [-i IP] [-p PORT]
+usage: master.py [-h] [-i IP] [-p PORT] [--log-level {debug,info,warn,critical}] [--log-file LOG_FILE]
 
 fogmsg Master
 
@@ -20,6 +20,9 @@ optional arguments:
   -h, --help            show this help message and exit
   -i IP, --ip IP        address that the node will bind to (default: 0.0.0.0)
   -p PORT, --port PORT  port that the node will bind to (default: 4000)
+  --log-level {debug,info,warn,critical}
+                        the log-level (default: info)
+  --log-file LOG_FILE   the path to the log file, default is to write to console
 ```
 
 ### Deploying a master node
@@ -35,6 +38,7 @@ $ python fogmsg/exectuables/master.py
 ```bash
 $ python fogmsg/executables/node.py --help
 usage: node.py [-h] [--master MASTER] [-i IP] [-p PORT] [--advertised_listener ADVERTISED_LISTENER]
+               [--log-level {debug,info,warn,critical}] [--log-file LOG_FILE]
 
 fogmsg Node
 
@@ -45,6 +49,9 @@ optional arguments:
   -p PORT, --port PORT  port that the node will bind to (default: 4001)
   --advertised_listener ADVERTISED_LISTENER
                         the advertisement listener of this node (default: tcp://localhost:4001)
+  --log-level {debug,info,warn,critical}
+                        the log-level (default: info)
+  --log-file LOG_FILE   the path to the log file, default is to write to console
 ```
 
 ## Deploying an edge node
