@@ -21,6 +21,7 @@ class MockSensor(Sensor):
         mem = psutil.virtual_memory()
         net = psutil.net_io_counters()
         return {
+            "time": int(time.time()),
             "cpu_percent": psutil.cpu_percent(),
             "mem_used": mem.available,
             "mem_free": mem.used,
