@@ -1,14 +1,29 @@
 # fogmsg - Simulated cloud messages
 
+- [fogmsg - Simulated cloud messages](#fogmsg---simulated-cloud-messages)
+  - [Requirements](#requirements)
+    - [Quickstart](#quickstart)
+  - [Components](#components)
+    - [Master](#master)
+    - [Edge Node](#edge-node)
+    - [Messaging](#messaging)
+
 ## Requirements
 
-- Linux based system
+- Linux based system (Tested on Ubuntu 20.04)
 - Python 3 (Tested on version 3.8.2)
 - Python Packages from `requirements.txt` (i.e. run `pip install -r requirements.txt`)
 
-## Master
+### Quickstart
 
-### Usage
+```bash
+$ scripts/start_master.sh &
+$ scripts/start_node.sh
+```
+
+## Components
+
+### Master
 
 ```bash
 $ python fogmsg/executables/master.py --help
@@ -25,15 +40,7 @@ optional arguments:
   --log-file LOG_FILE   the path to the log file, default is to write to console
 ```
 
-### Deploying a master node
-
-```bash
-$ scripts/start_master.sh
-# or
-$ python fogmsg/exectuables/master.py
-```
-
-### Edge node
+### Edge Node
 
 ```bash
 $ python fogmsg/executables/node.py --help
@@ -54,10 +61,24 @@ optional arguments:
   --log-file LOG_FILE   the path to the log file, default is to write to console
 ```
 
-## Deploying an edge node
+### Messaging
 
-```bash
-$ scripts/start_node.sh
-# or
-$ python fogmsg/exectuables/node.py
-```
+Messaging relies on the ZeroMQ library using REQ/REP sockets.
+Messages are always queued on the sender side.
+An error free message delivery can be seen in the sequence diagram:
+
+![Sequence Diagram](docs/images/fogmsg.png)
+
+The message delivery is as follows:
+
+1. the **node** starts a receiver thread that binds to a specified port
+2. the **node** puts an registration message into its message queue with an advertised hostname
+   1. all messages in the queue are tried to be sent to the master
+   2. in case the send times out or is not acknowledged, the message is put back into the message queue
+3. the **master** receives the registration message and creates a new sender thread with a message queue
+4. the **node** polls its sensor and puts a message into the queue
+5. the **master** receives the message and enqeues it into the sender queue of all other registered nodes
+
+Since messages are queued on the sender sides and only considered as delivered when they are acknowledged, each message is delivered atleast once.
+Additionally, the node sends messages to the master multiple times a second.
+The master then broadcasts these messages to all other connected nodes.
