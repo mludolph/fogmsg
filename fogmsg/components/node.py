@@ -98,7 +98,7 @@ class Node:
                 return False
         return True
 
-    def _send_message(self, msg):
+    def _send_message(self, msg, timeout=1000):
         self.logger.debug("sending message...")
         try:
             self.master.send_json(msg, zmq.NOBLOCK)
@@ -106,7 +106,7 @@ class Node:
             self.logger.warn("could not reach host!")
             raise TimeoutError
 
-        if self.master.poll(1000) == 0:
+        if self.master.poll(timeout) == 0:
             self.logger.warn("sending of message timed out!")
             raise TimeoutError
 
