@@ -1,0 +1,4 @@
+wheel
+zmq==22.1.0
+protobuf=3.14.0
+psutil

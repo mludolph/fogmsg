@@ -1,0 +1,2 @@
+class NoAcknowledgementError(RuntimeError):
+    pass
