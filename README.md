@@ -80,5 +80,7 @@ The message delivery is as follows:
 5. the **master** receives the message and enqeues it into the sender queue of all other registered nodes
 
 Since messages are queued on the sender sides and only considered as delivered when they are acknowledged, each message is delivered atleast once.
+If either a node or the master is down, all messages are queued for the respective receiver until the socket can reconnect and transmit all unacknowledged messages.
+
 Additionally, the node sends messages to the master multiple times a second.
 The master then broadcasts these messages to all other connected nodes.
