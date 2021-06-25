@@ -1,6 +1,6 @@
-# fogmsg - Simulated cloud messages
+# fogmsg - Simulated device-cloud messages
 
-- [fogmsg - Simulated cloud messages](#fogmsg---simulated-cloud-messages)
+- [fogmsg - Simulated device-cloud messages](#fogmsg---simulated-device-cloud-messages)
   - [Requirements](#requirements)
     - [Quickstart](#quickstart)
   - [Components](#components)
