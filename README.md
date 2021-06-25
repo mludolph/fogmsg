@@ -13,6 +13,7 @@
 - Linux based system (Tested on Ubuntu 20.04)
 - Python 3 (Tested on version 3.8.2)
 - Python Packages from `requirements.txt` (i.e. run `pip install -r requirements.txt`)
+- in case installations of "psutil" fails, try to run `sudo apt-get install python3-dev` before
 
 ### Quickstart
 
