@@ -162,7 +162,6 @@ class Node:
                 if not payload:
                     continue
 
-                print(payload)
                 self.msg_queue.append(
                     {
                         "cmd": "publish",
