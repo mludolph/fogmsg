@@ -35,7 +35,8 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        "--advertised_listener",
+        "--advertised-listener",
+        dest="advertised_listener",
         type=str,
         help="the advertisement listener of this node (default: tcp://localhost:4001)",
         default="tcp://localhost:4001",
@@ -77,6 +78,7 @@ if __name__ == "__main__":
         sensors=sensors,
         hostname=args.ip,
         port=args.port,
+        master_hostname=args.master,
         advertised_hostname=args.advertised_listener,
     )
 
