@@ -66,6 +66,7 @@ if __name__ == "__main__":
         sensor=sensor,
         hostname=args.ip,
         port=args.port,
+        master_hostname=args.master,
         advertised_hostname=args.advertised_listener,
     )
     try:
