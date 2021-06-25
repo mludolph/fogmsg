@@ -4,11 +4,11 @@ LOGLEVEL = "debug"
 LOGFILE = ""
 
 
-def configure_logger(name: str) -> logging.Logger:
+def configure_logger(name):
     logger = logging.getLogger(name)
-    if logger.hasHandlers():
+    #if logger.hasHandlers():
         # already configured
-        return logger
+    #    return logger
 
     levels = {
         "debug": logging.DEBUG,

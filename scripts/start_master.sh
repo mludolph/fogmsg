@@ -1,2 +1,2 @@
 #!/bin/bash
-python fogmsg/executables/master.py
+python3 fogmsg/executables/master.py

@@ -1,7 +1,7 @@
 import threading
 import time
 from collections import deque
-from typing import Dict
+#from typing import Dict
 
 import zmq
 from fogmsg.components.errors import NoAcknowledgementError
@@ -10,9 +10,9 @@ from zmq import Context
 
 
 class NodeSender(threading.Thread):
-    def __init__(self, advertised_hostname: str, ctx: Context = None):
+    def __init__(self, advertised_hostname, ctx = None):
         threading.Thread.__init__(self)
-        self.logger = configure_logger(f"sender({advertised_hostname})")
+        self.logger = configure_logger("sender("+str(advertised_hostname) + ")")
 
         self.advertised_hostname = advertised_hostname
 
@@ -36,7 +36,7 @@ class NodeSender(threading.Thread):
         self.socket.setsockopt(zmq.LINGER, 0)
         self.socket.close()
 
-        self.logger.info("closed connection (hostname={self.advertised_hostname}")
+        self.logger.info("closed connection (hostname="+str(self.advertised_hostname))
 
     def reconnect(self):
         if self.socket:
@@ -45,13 +45,11 @@ class NodeSender(threading.Thread):
 
         self.socket = self.ctx.socket(zmq.REQ)
         self.socket.connect(self.advertised_hostname)
-        self.logger.info(
-            f"connecting to node receiver (hostname={self.advertised_hostname})"
-        )
+        self.logger.info("connecting to node receiver (hostname="+ str(self.advertised_hostname) +")")
 
-    def try_send_messages(self) -> bool:
+    def try_send_messages(self):
         while len(self.msg_queue) > 0:
-            self.logger.debug(f"message queue: {len(self.msg_queue)}")
+            self.logger.debug("message queue:"+ str(len(self.msg_queue)))
             msg = self.msg_queue[-1]
             try:
                 self._send_message(msg)
@@ -88,23 +86,23 @@ class NodeSender(threading.Thread):
 
 
 class Master:
-    def __init__(self, hostname: str = "0.0.0.0", port: int = 4000):
+    def __init__(self, hostname = "0.0.0.0", port = 4000):
         self.logger = configure_logger("master")
         self.ctx = Context.instance()
         self.hostname = hostname
         self.port = port
 
-        self.nodes: Dict[str, NodeSender] = dict()
+        self.nodes = dict()
         self.nodes_lock = threading.Lock()
         self.running = False
 
-    def register_node(self, advertised_hostname: str, ctx: Context = None):
+    def register_node(self, advertised_hostname, ctx = None):
         ctx = ctx or Context.instance()
         with self.nodes_lock:
-            self.logger.info(f"registering node ({advertised_hostname})")
+            self.logger.info("registering node (" +str(advertised_hostname) + ")")
 
             if advertised_hostname in self.nodes:
-                self.logger.warn(f"node ({advertised_hostname}) already registered")
+                self.logger.warn("node ("+str({advertised_hostname})+") already registered")
                 return
 
             self.nodes[advertised_hostname] = NodeSender(advertised_hostname, ctx)
@@ -113,7 +111,7 @@ class Master:
     def unregister_node(self, advertised_hostname):
         with self.nodes_lock:
             if advertised_hostname in self.nodes:
-                self.logger.info(f"unregistering node ({advertised_hostname})")
+                self.logger.info("unregistering node ("+ str(advertised_hostname) + ")")
                 self.nodes[advertised_hostname].join()
                 del self.nodes[advertised_hostname]
 
@@ -139,10 +137,10 @@ class Master:
         self.logger.debug("starting fogmsg master...")
 
         self.socket = self.ctx.socket(zmq.REP)
-        self.socket.bind(f"tcp://{self.hostname}:{self.port}")
+        self.socket.bind("tcp://"+str(self.hostname)+ ":" + str(self.port))
 
         self.logger.info(
-            f"started master (hostname={self.hostname}, ports={self.port})"
+            "started master (hostname="+str(self.hostname) +", ports=" + str(self.port) +")"
         )
 
         self.running = True

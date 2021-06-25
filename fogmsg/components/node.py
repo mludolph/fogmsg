@@ -9,9 +9,12 @@ from fogmsg.components.sensor import Sensor
 from fogmsg.utils.logger import configure_logger
 from zmq import Context
 
+class TimeoutError(Exception):
+    pass
+
 
 class NodeReceiver(threading.Thread):
-    def __init__(self, hostname: str, port: int, ctx: Context = None):
+    def __init__(self, hostname, port, ctx = None):
         threading.Thread.__init__(self)
         self.logger = configure_logger("receiver")
         self.pp = PrettyPrinter(indent=4)
@@ -33,13 +36,13 @@ class NodeReceiver(threading.Thread):
         self.socket.close()
 
         self.logger.info(
-            f"node receiver shut down (hostname={self.hostname}, port={self.port})"
+            "node receiver shut down (hostname="+str(self.hostname)+", port=" + str(self.port) + ")"
         )
 
     def run(self):
-        self.socket.bind(f"tcp://{self.hostname}:{self.port}")
+        self.socket.bind("tcp://"+str(self.hostname)+":" +str(self.port))
         self.logger.info(
-            f"started node receiver (hostname={self.hostname}, port={self.port})"
+            "started node receiver (hostname="+str(self.hostname) + ", port=" +str(self.port) + ")"
         )
 
         while self.running.is_set():
@@ -49,18 +52,18 @@ class NodeReceiver(threading.Thread):
             msg = self.socket.recv_json()
             self.socket.send_json("ack")
             if msg["cmd"] == "publish":
-                self.logger.info(f"messsage from {msg['origin']}:")
+                self.logger.info("messsage from "+ str(msg['origin']) +":")
                 self.pp.pprint(msg)
 
 
 class Node:
     def __init__(
         self,
-        sensor: Sensor,
-        hostname: str = "0.0.0.0",
-        port: int = 4001,
-        advertised_hostname: str = "tcp://localhost:4001",
-        master_hostname: str = "tcp://localhost:4000",
+        sensor,
+        hostname = "0.0.0.0",
+        port = 4001,
+        advertised_hostname = "tcp://localhost:4001",
+        master_hostname = "tcp://localhost:4000",
     ):
         self.logger = configure_logger("node")
         self.ctx = Context.instance()
@@ -84,10 +87,10 @@ class Node:
 
         self.master = self.ctx.socket(zmq.REQ)
         self.master.connect(self.master_hostname)
-        self.logger.info(f"connecting to master (hostname={self.master_hostname})")
+        self.logger.info("connecting to master (hostname=" + str(self.master_hostname))
 
-    def try_send_messages(self) -> bool:
-        self.logger.debug(f"message queue: {len(self.msg_queue)}")
+    def try_send_messages(self):
+        self.logger.debug("message queue: " +str(len(self.msg_queue)))
         while len(self.msg_queue) > 0:
             msg = self.msg_queue[-1]
             try:
