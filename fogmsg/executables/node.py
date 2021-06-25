@@ -44,7 +44,8 @@ if __name__ == "__main__":
         "--pipe-files",
         dest="pipe_files",
         type=str,
-        help="the pipe file to use for ipc, to use multiple pipes, seperate them by ';' (default: /tmp/gpsdata)",
+        help="the pipe file to use for ipc, to use multiple pipes, \
+             seperate them by ';' (default: /tmp/gpsdata)",
         default="/tmp/gpsdata",
     )
 
