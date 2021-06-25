@@ -5,7 +5,7 @@ from os import path
 sys.path.append(path.join(path.dirname(__file__), "..", ".."))
 
 from fogmsg.components import Node  # noqa
-from fogmsg.components.sensor import MockSensor  # noqa
+from fogmsg.components.sensor import PipeSensor  # noqa
 import fogmsg.utils as utils  # noqa
 
 
@@ -40,6 +40,13 @@ if __name__ == "__main__":
         help="the advertisement listener of this node (default: tcp://localhost:4001)",
         default="tcp://localhost:4001",
     )
+    parser.add_argument(
+        "--pipe-files",
+        dest="pipe_files",
+        type=str,
+        help="the pipe file to use for ipc, to use multiple pipes, seperate them by ';' (default: /tmp/gpsdata)",
+        default="/tmp/gpsdata",
+    )
 
     parser.add_argument(
         "--log-level",
@@ -61,13 +68,17 @@ if __name__ == "__main__":
     setattr(utils.logger, "LOGLEVEL", args.log_level)
     setattr(utils.logger, "LOGFILE", args.log_file)
 
-    sensor = MockSensor()
+    sensors = []
+    for pipe_path in args.pipe_files.split(";"):
+        sensors.append(PipeSensor(pipe_path))
+
     node = Node(
-        sensor=sensor,
+        sensors=sensors,
         hostname=args.ip,
         port=args.port,
         advertised_hostname=args.advertised_listener,
     )
+
     try:
         node.run()
     except KeyboardInterrupt:

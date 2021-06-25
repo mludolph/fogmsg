@@ -39,6 +39,9 @@ class NodeSender(threading.Thread):
         self.logger.info("closed connection (hostname={self.advertised_hostname}")
 
     def reconnect(self):
+        if not self.running.is_set():
+            return
+
         if self.socket:
             self.socket.setsockopt(zmq.LINGER, 0)
             self.socket.close()
@@ -50,7 +53,7 @@ class NodeSender(threading.Thread):
         )
 
     def try_send_messages(self) -> bool:
-        while len(self.msg_queue) > 0:
+        while len(self.msg_queue) > 0 and self.running.is_set():
             self.logger.debug(f"message queue: {len(self.msg_queue)}")
             msg = self.msg_queue[-1]
             try:
@@ -117,6 +120,10 @@ class Master:
                 self.nodes[advertised_hostname].join()
                 del self.nodes[advertised_hostname]
 
+    def is_node_registered(self, advertised_hostname):
+        with self.nodes_lock:
+            return advertised_hostname in self.nodes
+
     def send_to_all(self, msg, exclude=None):
         with self.nodes_lock:
             self.logger.debug("sending message to all nodes...")
@@ -126,9 +133,12 @@ class Master:
                     sender.enqueue(msg)
 
     def join(self):
-        self.logger.debug("shutting down master...")
-        self.socket.close()
         self.running = False
+        self.logger.debug("shutting down master...")
+        if self.socket:
+            self.socket.setsockopt(zmq.LINGER, 0)
+            self.socket.close()
+
         with self.nodes_lock:
             for sender in self.nodes:
                 sender.join()
@@ -147,12 +157,23 @@ class Master:
 
         self.running = True
         while self.running:
+            try:
+                if self.socket.poll(1000) == 0:
+                    continue
+            except KeyboardInterrupt:
+                break
+
             msg = self.socket.recv_json()
-            self.socket.send_json("ack")
 
             if msg["cmd"] == "register":
                 self.register_node(msg["advertised_hostname"])
             elif msg["cmd"] == "unregister":
                 self.unregister_node(msg["advertised_hostname"])
             elif msg["cmd"] == "publish":
-                self.send_to_all(msg)
+                self.send_to_all(msg)  # TODO , exclude=origin)
+
+                origin = msg.get("origin", None)
+                if origin and not self.is_node_registered(origin):
+                    self.register_node(origin)
+
+            self.socket.send_json("ack")

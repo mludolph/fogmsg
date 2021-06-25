@@ -2,9 +2,10 @@ import threading
 import time
 from collections import deque
 from pprint import PrettyPrinter
+from typing import List
 
 import zmq
-from fogmsg.components.errors import NoAcknowledgementError
+from fogmsg.components.errors import NoAcknowledgementError, NotRegisteredError
 from fogmsg.components.sensor import Sensor
 from fogmsg.utils.logger import configure_logger
 from zmq import Context
@@ -56,7 +57,7 @@ class NodeReceiver(threading.Thread):
 class Node:
     def __init__(
         self,
-        sensor: Sensor,
+        sensors: List[Sensor],
         hostname: str = "0.0.0.0",
         port: int = 4001,
         advertised_hostname: str = "tcp://localhost:4001",
@@ -75,7 +76,7 @@ class Node:
 
         self.running = False
 
-        self.sensor = sensor
+        self.sensors = sensors
 
     def reconnect(self):
         if self.master:
@@ -96,6 +97,11 @@ class Node:
             except (TimeoutError, NoAcknowledgementError):
                 self.reconnect()
                 return False
+            except (NotRegisteredError):
+                self.msg_queue.appendleft(
+                    {"cmd": "register", "advertised_hostname": self.advertised_hostname}
+                )
+
         return True
 
     def _send_message(self, msg, timeout=1000):
@@ -112,8 +118,12 @@ class Node:
 
         msg = self.master.recv_json()
         if msg != "ack":
-            self.logger.warn("message was not ack'ed")
-            raise NoAcknowledgementError
+            if msg == "reg":
+                self.logger.warn("node needs to re-register")
+                raise NotRegisteredError
+            else:
+                self.logger.warn("message was not ack'ed")
+                raise NoAcknowledgementError
 
     def join(self):
         self.running = False
@@ -147,15 +157,17 @@ class Node:
         self.logger.info("registered and started node")
 
         while self.running:
-            payload = self.sensor.get_reading()
-            if not payload:
-                continue
+            for sensor in self.sensors:
+                payload = sensor.get_reading()
+                if not payload:
+                    continue
 
-            self.msg_queue.append(
-                {
-                    "cmd": "publish",
-                    "payload": payload,
-                    "origin": self.advertised_hostname,
-                }
-            )
+                self.msg_queue.append(
+                    {
+                        "cmd": "publish",
+                        "payload": payload,
+                        "origin": self.advertised_hostname,
+                    }
+                )
+
             self.try_send_messages()
