@@ -176,9 +176,9 @@ class Master:
             elif msg["cmd"] == "unregister":
                 self.unregister_node(msg["advertised_hostname"])
             elif msg["cmd"] == "publish":
-                self.send_to_all(msg)  # TODO , exclude=origin)
-
                 origin = msg.get("origin", None)
+                self.send_to_all(msg, exclude=origin)
+
                 if origin and not self.is_node_registered(origin):
                     self.register_node(origin)
 
