@@ -42,7 +42,7 @@ class NodeSender(threading.Thread):
         self.socket.setsockopt(zmq.LINGER, 0)
         self.socket.close()
 
-        self.logger.info("closed connection (hostname={self.advertised_hostname}")
+        self.logger.info(f"closed connection (hostname={self.advertised_hostname}")
 
     def reconnect(self):
         if not self.running.is_set():
