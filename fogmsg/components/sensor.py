@@ -1,3 +1,4 @@
+from fogmsg.utils.logger import configure_logger
 import json
 import os
 import time
@@ -10,6 +11,8 @@ except ImportError:
     print("PSUTIL disabled")
 
 from fogmsg.components.gps_data import gps_data_list
+
+LOGGER = configure_logger("sensor")
 
 
 class Sensor(ABC):
@@ -27,21 +30,27 @@ class PipeSensor(Sensor):
         self.pipe_file = pipe_file
         self.freq = freq
         self.last_reading = 0
+        self.pipe_fd = os.open(self.pipe_file, os.O_RDONLY | os.O_NONBLOCK)
 
     def get_reading(self):
-        if self.last_reading + self.freq > int(time.time()):
+        if self.last_reading + self.freq > int(time.time() * 1000):
             return None
-        self.last_reading = int(time.time())
+        self.last_reading = int(time.time() * 1000)
 
         if not os.path.exists(self.pipe_file):
             return None
 
-        with open(self.pipe_file, "r") as f:
-            try:
-                data = json.loads(f.read())
-                return data
-            except Exception:
-                return None
+        try:
+            buffer = os.read(self.pipe_fd, 1024)
+            decoded = buffer.decode("utf-8")
+            data = json.loads(decoded)
+            LOGGER.debug(f"generated data for pipe sensor {self.pipe_file}")
+            return data
+        except Exception:
+            return None
+
+    def close(self):
+        pass
 
     def continuous_log(self):
         return None
@@ -51,6 +60,7 @@ class GPSSensor(Sensor):
     def __init__(self, freq: float = 1000):
         self.freq = freq
         self.index = 0
+        self.last_reading = 0
 
     def _get_data(self):
         data = gps_data_list[self.index]
@@ -62,12 +72,12 @@ class GPSSensor(Sensor):
         while self.running:
             data = self.get_reading()
             callback(data)
-            time.sleep(self.freq)
+            time.sleep(self.freq / 1000)
 
     def get_reading(self):
-        if self.last_reading + self.freq > int(time.time()):
+        if self.last_reading + self.freq > int(time.time() * 1000):
             return None
-        self.last_reading = int(time.time())
+        self.last_reading = int(time.time() * 1000)
 
         data = self._get_data()
         result = {"time": int(time.time()), "lat": data[0], "lng": data[1]}
@@ -85,12 +95,12 @@ class MetricsSensor(Sensor):
         while self.running:
             data = self.get_reading()
             callback(data)
-            time.sleep(self.freq)
+            time.sleep(self.freq / 1000)
 
     def get_reading(self) -> Optional[dict]:
-        if self.last_reading + self.freq > int(time.time()):
+        if self.last_reading + self.freq > int(time.time() * 1000):
             return None
-        self.last_reading = int(time.time())
+        self.last_reading = int(time.time() * 1000)
 
         mem = psutil.virtual_memory()
         net = psutil.net_io_counters()

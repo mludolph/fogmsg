@@ -90,7 +90,7 @@ class Node:
     def try_send_messages(self) -> bool:
         self.logger.debug(f"message queue: {len(self.msg_queue)}")
         while len(self.msg_queue) > 0:
-            msg = self.msg_queue[-1]
+            msg = self.msg_queue[0]
             try:
                 self._send_message(msg)
                 self.msg_queue.popleft()
@@ -98,7 +98,7 @@ class Node:
                 self.reconnect()
                 return False
             except (NotRegisteredError):
-                self.msg_queue.appendleft(
+                self.msg_queue.append(
                     {"cmd": "register", "advertised_hostname": self.advertised_hostname}
                 )
 
@@ -162,6 +162,7 @@ class Node:
                 if not payload:
                     continue
 
+                print(payload)
                 self.msg_queue.append(
                     {
                         "cmd": "publish",

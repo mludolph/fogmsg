@@ -84,3 +84,6 @@ if __name__ == "__main__":
         node.run()
     except KeyboardInterrupt:
         node.join()
+
+        for sensor in sensors:
+            sensor.close()

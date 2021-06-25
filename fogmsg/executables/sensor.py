@@ -14,10 +14,13 @@ from fogmsg.utils.logger import configure_logger  # noqa
 LOGGER = configure_logger("sensor")
 
 
-def write_to_pipe(pipe_file: str, data):
-    with open(pipe_file, "w") as f:
-        LOGGER.info("data emitted")
-        f.write(json.dumps(data))
+def write_to_pipe(pipe_fd: str, data):
+    try:
+        os.write(pipe_fd, json.dumps(data).encode("utf-8"))
+        LOGGER.debug("data generated")
+    except BrokenPipeError:
+        LOGGER.critical("node shut down, shutting down sensor...")
+        exit(0)
 
 
 if __name__ == "__main__":
@@ -28,8 +31,8 @@ if __name__ == "__main__":
         "--pipe-file",
         dest="pipe_file",
         type=str,
-        help="the pipe file to use for ipc (default: /tmp/gpsdata)",
-        default="/tmp/gpsdata",
+        help="the pipe file to use for ipc (default: /tmp/metricsdata)",
+        default="/tmp/metricsdata",
     )
 
     parser.add_argument(
@@ -46,7 +49,7 @@ if __name__ == "__main__":
         dest="log_level",
         choices=["debug", "info", "warn", "critical"],
         help="the log-level (default: info)",
-        default="info",
+        default="debug",
     )
     parser.add_argument(
         "--log-file",
@@ -63,7 +66,7 @@ if __name__ == "__main__":
     try:
         if os.path.exists(args.pipe_file):
             os.remove(args.pipe_file)
-        os.mkfifo(args.pipe_file)
+        os.mkfifo(args.pipe_file, mode=0o777)
         LOGGER.info(f"started sensor with (pipe={args.pipe_file})!")
     except OSError:
         LOGGER.critical(f"could not create FIFO pipe at {args.pipe_file}!")
@@ -78,7 +81,10 @@ if __name__ == "__main__":
         LOGGER.critical(f"unsupported sensor type '{args.type}'!")
         exit(-1)
 
+    pipe_fd = os.open(args.pipe_file, os.O_WRONLY)
     try:
-        sensor.continuous_log(callback=lambda data: write_to_pipe(args.pipe_file, data))
+        LOGGER.info("generating data...")
+        sensor.continuous_log(callback=lambda data: write_to_pipe(pipe_fd, data))
     except KeyboardInterrupt:
+        os.close(pipe_fd)
         exit(0)

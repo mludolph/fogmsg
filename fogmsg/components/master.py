@@ -8,6 +8,10 @@ from fogmsg.components.errors import NoAcknowledgementError
 from fogmsg.utils.logger import configure_logger
 from zmq import Context
 
+import pprint
+
+pp = pprint.PrettyPrinter(indent=4)
+
 
 class NodeSender(threading.Thread):
     def __init__(self, advertised_hostname: str, ctx: Context = None):
@@ -27,6 +31,8 @@ class NodeSender(threading.Thread):
     def enqueue(self, msg):
         self.logger.debug("enqueuing message")
         self.msg_queue.append(msg)
+        self.logger.info("enqueue message")
+        pp.pprint(msg)
 
     def join(self, timeout=None):
         self.logger.debug("joining...")
@@ -55,7 +61,7 @@ class NodeSender(threading.Thread):
     def try_send_messages(self) -> bool:
         while len(self.msg_queue) > 0 and self.running.is_set():
             self.logger.debug(f"message queue: {len(self.msg_queue)}")
-            msg = self.msg_queue[-1]
+            msg = self.msg_queue[0]
             try:
                 self._send_message(msg)
                 self.msg_queue.popleft()
