@@ -1,4 +1,3 @@
-from fogmsg.utils.logger import configure_logger
 import json
 import os
 import time
@@ -10,12 +9,14 @@ try:
 except ImportError:
     print("PSUTIL disabled")
 
-from fogmsg.components.gps_data import gps_data_list
-
-LOGGER = configure_logger("sensor")
+from fogmsg.node.gps_data import gps_data_list
 
 
 class Sensor(ABC):
+    @abstractmethod
+    def name(self) -> str:
+        pass
+
     @abstractmethod
     def get_reading(self) -> Optional[dict]:
         pass
@@ -32,6 +33,9 @@ class PipeSensor(Sensor):
         self.last_reading = 0
         self.pipe_fd = os.open(self.pipe_file, os.O_RDONLY | os.O_NONBLOCK)
 
+    def name(self) -> str:
+        return os.path.basename(self.pipe_file)
+
     def get_reading(self):
         if self.last_reading + self.freq > int(time.time() * 1000):
             return None
@@ -44,7 +48,6 @@ class PipeSensor(Sensor):
             buffer = os.read(self.pipe_fd, 1024)
             decoded = buffer.decode("utf-8")
             data = json.loads(decoded)
-            LOGGER.debug(f"generated data for pipe sensor {self.pipe_file}")
             return data
         except Exception:
             return None
@@ -61,6 +64,9 @@ class GPSSensor(Sensor):
         self.freq = freq
         self.index = 0
         self.last_reading = 0
+
+    def name(self) -> str:
+        return "gps"
 
     def _get_data(self):
         data = gps_data_list[self.index]
@@ -89,6 +95,9 @@ class MetricsSensor(Sensor):
         self.freq = freq
         self.running = False
         self.last_reading = 0
+
+    def name(self) -> str:
+        return "metrics"
 
     def continuous_log(self, callback):
         self.running = True

@@ -1,11 +1,14 @@
 import argparse
+import os
 import sys
 from os import path
 
 sys.path.append(path.join(path.dirname(__file__), "..", ".."))
 
 import fogmsg.utils as utils  # noqa
-from fogmsg.components import Master  # noqa
+from fogmsg.master import Master  # noqa
+from fogmsg.master.config import MasterConfig  # noqa
+from fogmsg.frontend.app import APIThread  # noqa
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="fogmsg Master")
@@ -14,7 +17,7 @@ if __name__ == "__main__":
         "--ip",
         type=str,
         help="address that the node will bind to (default: 0.0.0.0)",
-        default="0.0.0.0",
+        default=os.environ.get("MASTER_IP", "0.0.0.0"),
     )
 
     parser.add_argument(
@@ -22,8 +25,42 @@ if __name__ == "__main__":
         "--port",
         type=int,
         help="port that the node will bind to (default: 4000)",
-        default=4000,
+        default=os.environ.get("MASTER_PORT", 4000),
     )
+
+    parser.add_argument(
+        "-uip",
+        "--ui-port",
+        dest="ui_port",
+        type=int,
+        help="port that the node will bind to (default: 4002)",
+        default=os.environ.get("MASTER_UI_PORT", 4002),
+    )
+
+    parser.add_argument(
+        "--sender-queue-length",
+        type=int,
+        dest="sender_queue_length",
+        help="length of the sender queues (default: 1000)",
+        default=os.environ.get("MASTER_SENDER_QUEUE_LENGTH", 1000),
+    )
+
+    parser.add_argument(
+        "--sender-timeout",
+        type=int,
+        dest="sender_timeout",
+        help="timeout of the sender in ms (default: 1000)",
+        default=os.environ.get("MASTER_SENDER_TIMEOUT", 1000),
+    )
+
+    parser.add_argument(
+        "--persistence-dir",
+        type=str,
+        dest="persistence_dir",
+        help="directory for queue files (default: ./)",
+        default=os.environ.get("MASTER_PERSISTENCE_DIR", "./"),
+    )
+
     parser.add_argument(
         "--log-level",
         type=str,
@@ -32,6 +69,7 @@ if __name__ == "__main__":
         help="the log-level (default: info)",
         default="info",
     )
+
     parser.add_argument(
         "--log-file",
         dest="log_file",
@@ -44,8 +82,13 @@ if __name__ == "__main__":
     setattr(utils.logger, "LOGLEVEL", args.log_level)
     setattr(utils.logger, "LOGFILE", args.log_file)
 
-    master = Master(hostname=args.ip, port=args.port)
+    config = MasterConfig(args)
+    master = Master(config=config)
+    api_thread = APIThread(master=master, config=config)
+
     try:
+        api_thread.start()
         master.run()
     except KeyboardInterrupt:
+        api_thread.join()
         master.join()

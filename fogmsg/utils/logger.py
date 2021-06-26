@@ -1,6 +1,6 @@
 import logging
 
-LOGLEVEL = "debug"
+LOGLEVEL = "info"
 LOGFILE = ""
 
 

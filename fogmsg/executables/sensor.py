@@ -7,11 +7,11 @@ from os import path
 sys.path.append(path.join(path.dirname(__file__), "..", ".."))
 
 import fogmsg.utils as utils  # noqa
-from fogmsg.components.sensor import GPSSensor, MetricsSensor  # noqa
+from fogmsg.node.sensor import GPSSensor, MetricsSensor  # noqa
 from fogmsg.utils.logger import configure_logger  # noqa
 
 
-LOGGER = configure_logger("sensor")
+LOGGER = configure_logger("sensor-generator")
 
 
 def write_to_pipe(pipe_fd: str, data):
@@ -31,8 +31,8 @@ if __name__ == "__main__":
         "--pipe-file",
         dest="pipe_file",
         type=str,
-        help="the pipe file to use for ipc (default: /tmp/metricsdata)",
-        default="/tmp/metricsdata",
+        help="the pipe file to use for ipc (default: /tmp/metrics)",
+        default="/tmp/metrics",
     )
 
     parser.add_argument(
@@ -49,7 +49,7 @@ if __name__ == "__main__":
         dest="log_level",
         choices=["debug", "info", "warn", "critical"],
         help="the log-level (default: info)",
-        default="debug",
+        default="info",
     )
     parser.add_argument(
         "--log-file",
