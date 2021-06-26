@@ -121,7 +121,7 @@
           wrapper.appendChild(card)
 
           context = canvas.getContext("2d");
-          config = JSON.parse(JSON.stringify(object))
+          config = JSON.parse(JSON.stringify(defaultConfig))
 
           lineChart = new Chart(context, config);
           configs[node.hashId] = config;
