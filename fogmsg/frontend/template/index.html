@@ -110,7 +110,7 @@
               config.data.datasets[hostname_idx[data.id]].data.shift();
             }
             config.data.labels.push(data.time);
-            config.data.datasets[hostname_idx[node.id]].data.push(data.cpu_percent);
+            config.data.datasets[hostname_idx[data.id]].data.push(data.cpu_percent);
             lineChart.update();
           };
           idx += 1;
