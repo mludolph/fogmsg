@@ -12,12 +12,8 @@
 <body>
   <div class="container">
     <div class="row">
-      <div class="col-12">
-        <div class="card">
-          <div class="card-body">
-            <canvas id="canvas"></canvas>
-          </div>
-        </div>
+      <div id="metrics-wrapper" class="col-8">
+
       </div>
     </div>
     <div class="row">
@@ -32,11 +28,23 @@
 
   <script>
     $(document).ready(function () {
-      const config = {
+      const defaultConfig = {
         type: "line",
         data: {
           labels: [],
-          datasets: [],
+          datasets: [{
+            label: "CPU (%)",
+            backgroundColor: "orange",
+            borderColor: "orange",
+            data: [],
+            fill: false,
+          }, {
+            label: "MEM (%)",
+            backgroundColor: "blue",
+            borderColor: "blue",
+            data: [],
+            fill: false,
+          }],
         },
         options: {
           animation: {
@@ -45,7 +53,7 @@
           responsive: true,
           title: {
             display: true,
-            text: "Node CPU usage",
+            text: "",
           },
           tooltips: {
             mode: "index",
@@ -74,7 +82,6 @@
         },
       };
 
-
       function getRandomColor() {
         // reference: https://stackoverflow.com/questions/25594478/different-color-for-each-bar-in-a-bar-chart-chartjs
         var letters = '0123456789ABCDEF'.split('');
@@ -85,35 +92,55 @@
         return color;
       }
 
-      const context = document.getElementById("canvas").getContext("2d");
-      const lineChart = new Chart(context, config);
+      /**
+            <
+            div class = "card" >
+              <
+              div class = "card-body" >
+              <
+              canvas id = "canvas" > < /canvas> < /
+            div > <
+              /div>**/
+
+      const wrapper = document.getElementById("metrics-wrapper");
+      const configs = {}
+      const lineCharts = {}
 
       axios.get("/api/nodes").then((nodes) => {
-        hostname_idx = {}
-
-        idx = 0
         for (node of nodes.data) {
-          config.data.datasets.push({
-            label: node.hostname,
-            backgroundColor: getRandomColor(),
-            borderColor: getRandomColor(),
-            data: [],
-            fill: false,
-          });
-          hostname_idx[node.hashId] = idx
+          card = document.createElement("div");
+          card.classList.add('card');
 
-          const source = new EventSource(`/api/live/${node.hashId}/metrics`);
+          cardBody = document.createElement("div");
+          cardBody.classList.add("card-body");
+
+          canvas = document.createElement("canvas");
+
+          cardBody.appendChild(canvas);
+          card.appendChild(cardBody);
+          wrapper.appendChild(card)
+
+          context = canvas.getContext("2d");
+          config = JSON.parse(JSON.stringify(object))
+
+          lineChart = new Chart(context, config);
+          configs[node.hashId] = config;
+          lineCharts[node.hashId] = lineChart;
+
+          source = new EventSource(`/api/live/${node.hashId}/metrics`);
           source.onmessage = function (event) {
             const data = JSON.parse(event.data);
-            if (config.data.labels.length === 20) {
-              config.data.labels.shift();
-              config.data.datasets[hostname_idx[data.id]].data.shift();
+
+            if (configs[data.id].data.labels.length === 20) {
+              configs[data.id].data.labels.shift();
+              configs[data.id].data.datasets[0].data.shift();
+              configs[data.id].data.datasets[1].data.shift();
             }
-            config.data.labels.push(data.time);
-            config.data.datasets[hostname_idx[data.id]].data.push(data.cpu_percent);
+            configs[data.id].data.labels.push(data.time);
+            configs[data.id].data.datasets[0].data.push(data.cpu_percent);
+            configs[data.id].data.datasets[1].data.push(data.mem_percent);
             lineChart.update();
           };
-          idx += 1;
         }
       })
       /*
