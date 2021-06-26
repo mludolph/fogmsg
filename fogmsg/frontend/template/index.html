@@ -100,17 +100,17 @@
             data: [],
             fill: false,
           });
-          hostname_idx[node.hostname] = idx
+          hostname_idx[node.hashId] = idx
 
           const source = new EventSource(`/api/live/${node.hashId}/metrics`);
           source.onmessage = function (event) {
             const data = JSON.parse(event.data);
             if (config.data.labels.length === 20) {
               config.data.labels.shift();
-              config.data.datasets[hostname_idx[node.hostname]].data.shift();
+              config.data.datasets[hostname_idx[data.id]].data.shift();
             }
             config.data.labels.push(data.time);
-            config.data.datasets[hostname_idx[node.hostname]].data.push(data.cpu_percent);
+            config.data.datasets[hostname_idx[node.id]].data.push(data.cpu_percent);
             lineChart.update();
           };
           idx += 1;

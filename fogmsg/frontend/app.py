@@ -62,7 +62,7 @@ def get_last_data(sensor_id, type):
         last_timestamp = msg["time"]
 
         del msg["time"]
-        json_data = json.dumps({"time": ts, **msg})
+        json_data = json.dumps({"time": ts, "id": sensor_id, **msg})
 
         yield f"data:{json_data}\n\n"
     time.sleep(1)
@@ -73,7 +73,7 @@ def get_last_data(sensor_id, type):
             ts = datetime.utcfromtimestamp(msg["time"]).strftime("%Y-%m-%d %H:%M:%S")
             last_timestamp = msg["time"]
             del msg["time"]
-            json_data = json.dumps({"time": ts, **msg})
+            json_data = json.dumps({"time": ts, "id": sensor_id, **msg})
             yield f"data:{json_data}\n\n"
 
         time.sleep(1)
