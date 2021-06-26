@@ -1,6 +1,7 @@
 import os
 from typing import List
 import hashlib
+import time
 
 import zmq
 from fogmsg.node.config import NodeConfig
@@ -134,5 +135,6 @@ class Node:
                     )
 
                 self.try_send_messages()
+                time.sleep(0.2)
         except KeyboardInterrupt:
             self.join()
