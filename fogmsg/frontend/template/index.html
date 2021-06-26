@@ -122,7 +122,7 @@
 
           context = canvas.getContext("2d");
           configs[node.hashId] = JSON.parse(JSON.stringify(defaultConfig))
-          configs[node.hashId].data.options.title = node.hostname + " metrics";
+          configs[node.hashId].options.title = node.hostname + " metrics";
 
           lineCharts[node.hashId] = new Chart(context, configs[node.hashId]);
 
