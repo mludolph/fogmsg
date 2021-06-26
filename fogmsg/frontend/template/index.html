@@ -121,11 +121,10 @@
           wrapper.appendChild(card)
 
           context = canvas.getContext("2d");
-          config = JSON.parse(JSON.stringify(defaultConfig))
+          configs[node.hashId] = JSON.parse(JSON.stringify(defaultConfig))
+          configs[node.hashId].data.options.title = node.hostname + " metrics";
 
-          lineChart = new Chart(context, config);
-          configs[node.hashId] = config;
-          lineCharts[node.hashId] = lineChart;
+          lineCharts[node.hashId] = new Chart(context, configs[node.hashId]);
 
           source = new EventSource(`/api/live/${node.hashId}/metrics`);
           source.onmessage = function (event) {
@@ -139,7 +138,7 @@
             configs[data.id].data.labels.push(data.time);
             configs[data.id].data.datasets[0].data.push(data.cpu_percent);
             configs[data.id].data.datasets[1].data.push(data.mem_percent);
-            lineChart.update();
+            lineCharts[data.id].update();
           };
         }
       })
