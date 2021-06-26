@@ -92,9 +92,10 @@ def index():
 class APIThread(threading.Thread):
     def __init__(self, master: Master, config: MasterConfig):
         threading.Thread.__init__(self)
+        self.ip = config.IP
         self.port = config.UI_PORT
         setattr(app, "master", master)
         setattr(app, "db_conf", config)
 
     def run(self):
-        app.run(port=4002, threaded=True)
+        app.run(host=self.ip, port=self.port, threaded=True)
