@@ -63,7 +63,6 @@ class NodeSender(threading.Thread):
 
     def try_send_messages(self) -> bool:
         while self.msg_queue.peek():
-            self.logger.debug(f"message queue: {len(self.msg_queue)}")
             msg = self.msg_queue.peek()
             try:
                 self._send_message(msg)
