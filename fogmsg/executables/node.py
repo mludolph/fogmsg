@@ -16,7 +16,7 @@ if __name__ == "__main__":
         "--master-hostname",
         dest="master_hostname",
         type=str,
-        help="hostname of the master (default: tcp://localhost:4000)",
+        help="hostname of the master (default: tcp://localhost:4000, env: MASTER_HOSTNAME)",
         default=os.environ.get("MASTER_HOSTNAME", "tcp://localhost:4000"),
     )
 
@@ -24,7 +24,7 @@ if __name__ == "__main__":
         "-i",
         "--ip",
         type=str,
-        help="address that the node will bind to (default: 0.0.0.0)",
+        help="address that the node will bind to (default: 0.0.0.0, env: NODE_IP)",
         default=os.environ.get("NODE_IP", "0.0.0.0"),
     )
 
@@ -32,7 +32,7 @@ if __name__ == "__main__":
         "-p",
         "--port",
         type=int,
-        help="port that the node will bind to (default: 4001)",
+        help="port that the node will bind to (default: 4001, env: NODE_PORT)",
         default=os.environ.get("NODE_PORT", 4001),
     )
 
@@ -40,7 +40,7 @@ if __name__ == "__main__":
         "--advertised-listener",
         dest="advertised_hostname",
         type=str,
-        help="the advertisement listener of this node (default: tcp://localhost:4001)",
+        help="the advertisement listener of this node (default: tcp://localhost:4001, env: NODE_ADVERTISED_LISTENER)",
         default=os.environ.get("NODE_ADVERTISED_LISTENER", "tcp://localhost:4001"),
     )
 
@@ -66,7 +66,7 @@ if __name__ == "__main__":
         "--sender-queue-length",
         type=int,
         dest="sender_queue_length",
-        help="length of the sender queues (default: 1000)",
+        help="length of the sender queues (default: 1000, env: NODE_SENDER_QUEUE_LENGTH)",
         default=os.environ.get("NODE_SENDER_QUEUE_LENGTH", 1000),
     )
 
@@ -74,7 +74,7 @@ if __name__ == "__main__":
         "--sender-timeout",
         type=int,
         dest="sender_timeout",
-        help="timeout of the sender in ms (default: 1000)",
+        help="timeout of the sender in ms (default: 1000, env: NODE_SENDER_TIMEOUT)",
         default=os.environ.get("NODE_SENDER_TIMEOUT", 1000),
     )
 
@@ -82,7 +82,7 @@ if __name__ == "__main__":
         "--persistence-dir",
         type=str,
         dest="persistence_dir",
-        help="directory for queue files (default: ./)",
+        help="directory for queue files (default: ./, env: NODE_PERSISTENCE_DIR)",
         default=os.environ.get("NODE_PERSISTENCE_DIR", "./"),
     )
 

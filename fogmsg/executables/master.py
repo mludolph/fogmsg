@@ -16,7 +16,7 @@ if __name__ == "__main__":
         "-i",
         "--ip",
         type=str,
-        help="address that the node will bind to (default: 0.0.0.0)",
+        help="address that the node will bind to (default: 0.0.0.0, env: MASTER_IP)",
         default=os.environ.get("MASTER_IP", "0.0.0.0"),
     )
 
@@ -24,7 +24,7 @@ if __name__ == "__main__":
         "-p",
         "--port",
         type=int,
-        help="port that the node will bind to (default: 4000)",
+        help="port that the node will bind to (default: 4000, env: MASTER_PORT)",
         default=os.environ.get("MASTER_PORT", 4000),
     )
 
@@ -33,7 +33,7 @@ if __name__ == "__main__":
         "--ui-port",
         dest="ui_port",
         type=int,
-        help="port that the node will bind to (default: 4002)",
+        help="port that the node will bind to (default: 4002, env: MASTER_UI_PORT)",
         default=os.environ.get("MASTER_UI_PORT", 4002),
     )
 
@@ -41,7 +41,7 @@ if __name__ == "__main__":
         "--sender-queue-length",
         type=int,
         dest="sender_queue_length",
-        help="length of the sender queues (default: 1000)",
+        help="length of the sender queues (default: 1000, env: MASTER_SENDER_QUEUE_LENGTH)",
         default=os.environ.get("MASTER_SENDER_QUEUE_LENGTH", 1000),
     )
 
@@ -49,7 +49,7 @@ if __name__ == "__main__":
         "--sender-timeout",
         type=int,
         dest="sender_timeout",
-        help="timeout of the sender in ms (default: 1000)",
+        help="timeout of the sender in ms (default: 1000, env: MASTER_SENDER_TIMEOUT)",
         default=os.environ.get("MASTER_SENDER_TIMEOUT", 1000),
     )
 
@@ -57,7 +57,7 @@ if __name__ == "__main__":
         "--persistence-dir",
         type=str,
         dest="persistence_dir",
-        help="directory for queue files (default: ./)",
+        help="directory for queue files (default: ./, env: MASTER_PERSISTENCE_DIR)",
         default=os.environ.get("MASTER_PERSISTENCE_DIR", "./"),
     )
 

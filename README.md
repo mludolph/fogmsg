@@ -1,5 +1,7 @@
 # fogmsg - Fog Computing Prototype
 
+by Moritz Ludolph, Maximilian Bähnisch and Maher Shukur
+
 - [fogmsg - Fog Computing Prototype](#fogmsg---fog-computing-prototype)
   - [Summary](#summary)
   - [Architecture Overview](#architecture-overview)
@@ -19,6 +21,7 @@
 ## Summary
 
 This project serves as a prototype implementation of a Fog Computing application with edge and cloud components that communicate with each other with a lightweight and reliable messaging system.
+For this, simulated GPS and device metrics are broadcasted to all connected egde nodes, which could be useful e.g. in a connected-cars scenario.
 The project is implemented using Python and makes heavy use of the ZeroMQ library to provide **atleast-once** message delivery garantuee.
 
 ## Architecture Overview
@@ -50,12 +53,71 @@ $ scripts/start_node.sh
 
 **Docker**:
 
-```
+```bash
 $ docker-compose -f docker-compose.master.yml up -d
 $ docker-compose -f docker-compose.node.yml up -d
 ```
 
-Please note that the environment variables might have to be changed to fit a specific setup.
+Please note that the environment variables might have to be changed to fit a specific setup (i.e. `MASTER_HOSTNAME` and `NODE_ADVERTISED_LISTENER`).
+
+**Master Arguments/Environment variables**:
+
+```bash
+$ python fogmsg/executables/master.py --help
+usage: master.py [-h] [-i IP] [-p PORT] [-uip UI_PORT] [--sender-queue-length SENDER_QUEUE_LENGTH] [--sender-timeout SENDER_TIMEOUT]
+                 [--persistence-dir PERSISTENCE_DIR] [--log-level {debug,info,warn,critical}] [--log-file LOG_FILE]
+
+fogmsg Master
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -i IP, --ip IP        address that the node will bind to (default: 0.0.0.0, env: MASTER_IP)
+  -p PORT, --port PORT  port that the node will bind to (default: 4000, env: MASTER_PORT)
+  -uip UI_PORT, --ui-port UI_PORT
+                        port that the node will bind to (default: 4002, env: MASTER_UI_PORT)
+  --sender-queue-length SENDER_QUEUE_LENGTH
+                        length of the sender queues (default: 1000, env: MASTER_SENDER_QUEUE_LENGTH)
+  --sender-timeout SENDER_TIMEOUT
+                        timeout of the sender in ms (default: 1000, env: MASTER_SENDER_TIMEOUT)
+  --persistence-dir PERSISTENCE_DIR
+                        directory for queue files (default: ./, env: MASTER_PERSISTENCE_DIR)
+  --log-level {debug,info,warn,critical}
+                        the log-level (default: info)
+  --log-file LOG_FILE   the path to the log file, default is to write to console
+```
+
+**Node Arguments/Environment Variables**:
+
+```bash
+usage: node.py [-h] [--master-hostname MASTER_HOSTNAME] [-i IP] [-p PORT] [--advertised-listener ADVERTISED_HOSTNAME]
+               [--sensor-pipes PIPE_FILES] [--sensor-types SENSOR_TYPES] [--sender-queue-length SENDER_QUEUE_LENGTH]
+               [--sender-timeout SENDER_TIMEOUT] [--persistence-dir PERSISTENCE_DIR] [--log-level {debug,info,warn,critical}]
+               [--log-file LOG_FILE]
+
+fogmsg Node
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --master-hostname MASTER_HOSTNAME
+                        hostname of the master (default: tcp://localhost:4000, env: MASTER_HOSTNAME)
+  -i IP, --ip IP        address that the node will bind to (default: 0.0.0.0, env: NODE_IP)
+  -p PORT, --port PORT  port that the node will bind to (default: 4001, env: NODE_PORT)
+  --advertised-listener ADVERTISED_HOSTNAME
+                        the advertisement listener of this node (default: tcp://localhost:4001, env: NODE_ADVERTISED_LISTENER)
+  --sensor-pipes PIPE_FILES
+                        the pipe file to use for ipc, to use multiple pipes, seperate them by ';' (default: /tmp/metrics;/tmp/gps)
+  --sensor-types SENSOR_TYPES
+                        the type of the sensors specified by the pipes, seperate them by ';' (default: metrics;gps)
+  --sender-queue-length SENDER_QUEUE_LENGTH
+                        length of the sender queues (default: 1000, env: NODE_SENDER_QUEUE_LENGTH)
+  --sender-timeout SENDER_TIMEOUT
+                        timeout of the sender in ms (default: 1000, env: NODE_SENDER_TIMEOUT)
+  --persistence-dir PERSISTENCE_DIR
+                        directory for queue files (default: ./, env: NODE_PERSISTENCE_DIR)
+  --log-level {debug,info,warn,critical}
+                        the log-level (default: info)
+  --log-file LOG_FILE   the path to the log file, default is to write to console
+```
 
 ## Components
 
