@@ -13,4 +13,4 @@ services:
     command: ["bash", "scripts/start_master.sh"]
     ports:
       - 4000:4000
-      - 4001:4001
+      - 4002:4002
