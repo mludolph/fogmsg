@@ -1,6 +1,6 @@
 #!/bin/bash
-MASTER_IP=localhost
-EXTERNAL_IP=localhost
+# MASTER_IP=localhost
+# EXTERNAL_IP=localhost
 
 python fogmsg/executables/sensor.py --type=metrics --pipe-file="/tmp/metrics" --log-level="critical" &
 python fogmsg/executables/sensor.py --type=gps --pipe-file="/tmp/gps" --log-level="critical" &

@@ -1,0 +1,16 @@
+version: "3"
+
+services:
+  fogmsg-node:
+    build: .
+    environment:
+      - MASTER_HOSTNAME=tcp://master:4000
+      - NODE_IP=0.0.0.0
+      - NODE_PORT=4001
+      - NODE_ADVERTISED_LISTENER=tcp://node:4001
+      - NODE_SENDER_QUEUE_LENGTH=1000
+      - NODE_SENDER_TIMEOUT=1000
+      - NODE_PERSISTENCE_DIR=/data
+    command: ["bash", "scripts/start_node.sh"]
+    ports:
+      - 4001:4001

@@ -1,0 +1,16 @@
+version: "3"
+
+services:
+  fogmsg-master:
+    build: .
+    environment:
+      - MASTER_IP=0.0.0.0
+      - MASTER_PORT=4000
+      - MASTER_UI_PORT=4002
+      - MASTER_SENDER_QUEUE_LENGTH=1000
+      - MASTER_SENDER_TIMEOUT=1000
+      - MASTER_PERSISTENCE_DIR=/data
+    command: ["bash", "scripts/start_master.sh"]
+    ports:
+      - 4000:4000
+      - 4001:4001
