@@ -41,7 +41,8 @@ if __name__ == "__main__":
         "--sender-queue-length",
         type=int,
         dest="sender_queue_length",
-        help="length of the sender queues (default: 1000, env: MASTER_SENDER_QUEUE_LENGTH)",
+        help="length of the sender queues (default: 1000, env: \
+            MASTER_SENDER_QUEUE_LENGTH)",
         default=os.environ.get("MASTER_SENDER_QUEUE_LENGTH", 1000),
     )
 

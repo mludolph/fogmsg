@@ -16,7 +16,8 @@ if __name__ == "__main__":
         "--master-hostname",
         dest="master_hostname",
         type=str,
-        help="hostname of the master (default: tcp://localhost:4000, env: MASTER_HOSTNAME)",
+        help="hostname of the master (default: tcp://localhost:4000, \
+            env: MASTER_HOSTNAME)",
         default=os.environ.get("MASTER_HOSTNAME", "tcp://localhost:4000"),
     )
 
@@ -40,7 +41,8 @@ if __name__ == "__main__":
         "--advertised-listener",
         dest="advertised_hostname",
         type=str,
-        help="the advertisement listener of this node (default: tcp://localhost:4001, env: NODE_ADVERTISED_LISTENER)",
+        help="the advertisement listener of this node (default: tcp://localhost:4001, \
+            env: NODE_ADVERTISED_LISTENER)",
         default=os.environ.get("NODE_ADVERTISED_LISTENER", "tcp://localhost:4001"),
     )
 
@@ -66,7 +68,8 @@ if __name__ == "__main__":
         "--sender-queue-length",
         type=int,
         dest="sender_queue_length",
-        help="length of the sender queues (default: 1000, env: NODE_SENDER_QUEUE_LENGTH)",
+        help="length of the sender queues (default: 1000, \
+            env: NODE_SENDER_QUEUE_LENGTH)",
         default=os.environ.get("NODE_SENDER_QUEUE_LENGTH", 1000),
     )
 
