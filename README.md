@@ -139,8 +139,8 @@ The master also contains a simple REST interface based on the Pyhton library `fl
 
 ## Demo Video
 
-A demo video explaining the core components and features of this prototype can be found here.
+A short video demonstrating the reliable messaging can be found at .
 
 ## License
 
-The software is licensed under MIT and is and is available publicly on Github ().
+The software is licensed under MIT and is and is available publicly on Github ([https://github.com/mludolph/fogmsg](https://github.com/mludolph/fogmsg)).
