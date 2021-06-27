@@ -1,3 +1,4 @@
+from fogmsg.utils import messaging
 from fogmsg.node.config import NodeConfig
 import threading
 import zmq
@@ -43,8 +44,10 @@ class NodeReceiver(threading.Thread):
             if self.socket.poll(1000) == 0:
                 continue
 
-            msg = self.socket.recv_json()
-            self.socket.send_json("ack")
-            if msg["cmd"] == "publish":
+            msg = self.socket.recv()
+            msg = messaging.deserialize(msg)
+            self.socket.send(messaging.ack_message())
+
+            if msg and msg["cmd"] == "publish":
                 self.logger.info(f"messsage from {msg['origin']}:")
                 self.message_callback(msg)

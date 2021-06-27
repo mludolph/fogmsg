@@ -1,3 +1,4 @@
+from fogmsg.utils import messaging
 import hashlib
 import os
 import threading
@@ -75,7 +76,7 @@ class NodeSender(threading.Thread):
     def _send_message(self, msg):
         self.logger.debug("sending message...")
         try:
-            self.socket.send_json(msg, zmq.NOBLOCK)
+            self.socket.send(msg, zmq.NOBLOCK)
         except zmq.error.Again:
             self.logger.warn("could not reach host!")
             raise TimeoutError
@@ -84,7 +85,8 @@ class NodeSender(threading.Thread):
             self.logger.warn("sending of message timed out!")
             raise TimeoutError
 
-        msg = self.socket.recv_json()
+        msg = self.socket.recv()
+        msg = messaging.deserialize(msg)
         if msg != "ack":
             self.logger.warn("message was not ack'ed")
             raise NoAcknowledgementError

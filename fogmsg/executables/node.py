@@ -45,12 +45,21 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        "--pipe-files",
+        "--sensor-pipes",
         dest="pipe_files",
         type=str,
         help="the pipe file to use for ipc, to use multiple pipes, \
              seperate them by ';' (default: /tmp/metrics;/tmp/gps)",
         default="/tmp/metrics;/tmp/gps",
+    )
+
+    parser.add_argument(
+        "--sensor-types",
+        dest="sensor_types",
+        type=str,
+        help="the type of the sensors specified by the pipes, \
+             seperate them by ';' (default: metrics;gps)",
+        default="metrics;gps",
     )
 
     parser.add_argument(
@@ -99,8 +108,10 @@ if __name__ == "__main__":
     setattr(utils.logger, "LOGFILE", args.log_file)
 
     sensors = []
-    for pipe_path in args.pipe_files.split(";"):
-        sensors.append(PipeSensor(pipe_path))
+
+    types = args.sensor_types.split(";")
+    for idx, pipe_path in enumerate(args.pipe_files.split(";")):
+        sensors.append(PipeSensor(pipe_path, type=types[idx]))
 
     config = NodeConfig(args)
     node = Node(sensors=sensors, config=config)

@@ -7,4 +7,3 @@ class NodeConfig:
         self.PERSISTENCE_DIR = args.persistence_dir
         self.SENDER_QUEUE_LENGTH = args.sender_queue_length
         self.SENDER_TIMEOUT = args.sender_timeout
-        print(args.sender_timeout)

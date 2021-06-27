@@ -1,7 +1,7 @@
 import json
 import os
 import time
-from abc import ABC, abstractmethod
+from abc import ABC, abstractmethod, abstractstaticmethod
 from typing import Optional
 
 try:
@@ -25,16 +25,21 @@ class Sensor(ABC):
     def continuous_log(self):
         pass
 
+    @abstractstaticmethod
+    def schema() -> dict:
+        pass
+
 
 class PipeSensor(Sensor):
-    def __init__(self, pipe_file: str, freq: float = 1000):
+    def __init__(self, pipe_file: str, type: str, freq: float = 1000):
         self.pipe_file = pipe_file
         self.freq = freq
         self.last_reading = 0
+        self.type = type
         self.pipe_fd = os.open(self.pipe_file, os.O_RDONLY | os.O_NONBLOCK)
 
     def name(self) -> str:
-        return os.path.basename(self.pipe_file)
+        return self.type
 
     def get_reading(self):
         if self.last_reading + self.freq > int(time.time() * 1000):
@@ -52,11 +57,15 @@ class PipeSensor(Sensor):
         except Exception:
             return None
 
+    def continuous_log(self):
+        return None
+
     def close(self):
         pass
 
-    def continuous_log(self):
-        return None
+    @staticmethod
+    def schema() -> dict:
+        pass
 
 
 class GPSSensor(Sensor):
@@ -88,6 +97,15 @@ class GPSSensor(Sensor):
         data = self._get_data()
         result = {"time": int(time.time()), "lat": data[0], "lng": data[1]}
         return result
+
+    @staticmethod
+    def schema() -> dict:
+        return {
+            "time": int,
+            "lat": float,
+            "lng": float,
+            "_order": ["time", "lat", "lng"],
+        }
 
 
 class MetricsSensor(Sensor):
@@ -121,4 +139,25 @@ class MetricsSensor(Sensor):
             "mem_percent": mem.percent,
             "net_sent": net.bytes_sent,
             "net_received": net.bytes_recv,
+        }
+
+    @staticmethod
+    def schema() -> dict:
+        return {
+            "time": int,
+            "cpu_percent": float,
+            "mem_used": int,
+            "mem_free": int,
+            "mem_percent": float,
+            "net_sent": int,
+            "net_received": int,
+            "_order": [
+                "time",
+                "cpu_percent",
+                "mem_used",
+                "mem_free",
+                "mem_percent",
+                "net_sent",
+                "net_received",
+            ],
         }

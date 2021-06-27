@@ -10,5 +10,6 @@ sleep 0.5
 
 python fogmsg/executables/node.py --master="tcp://${MASTER_IP}:4000" \
                                   --advertised-listener="tcp://${EXTERNAL_IP}:4001" \
-                                  --pipe-files="/tmp/metrics;/tmp/gps"
+                                  --sensor-pipes="/tmp/metrics;/tmp/gps"
+                                  --sensor-types="metrics;gps"
 

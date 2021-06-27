@@ -1,16 +1,21 @@
-import os
-from typing import List
 import hashlib
+import os
 import time
+from typing import List
 
 import zmq
 from fogmsg.node.config import NodeConfig
 from fogmsg.node.receiver import NodeReceiver
 from fogmsg.node.sensor import Sensor
+from fogmsg.utils import messaging
 from fogmsg.utils.errors import NoAcknowledgementError
 from fogmsg.utils.logger import configure_logger
 from fogmsg.utils.queue import MessageQueue
 from zmq import Context
+
+from pprint import PrettyPrinter
+
+pp = PrettyPrinter(indent=4)
 
 
 class Node:
@@ -64,7 +69,8 @@ class Node:
     def _send_message(self, msg):
         self.logger.debug("sending message...")
         try:
-            self.master.send_json(msg, zmq.NOBLOCK)
+            # self.master.send_json(msg, zmq.NOBLOCK)
+            self.master.send(msg)
         except zmq.error.Again:
             self.logger.warn("could not reach host!")
             raise TimeoutError
@@ -73,7 +79,8 @@ class Node:
             self.logger.warn("sending of message timed out!")
             raise TimeoutError
 
-        msg = self.master.recv_json()
+        msg = self.master.recv()
+        msg = messaging.deserialize(msg)
         if msg != "ack":
             self.logger.warn("message was not ack'ed")
             raise NoAcknowledgementError
@@ -83,9 +90,7 @@ class Node:
         self.logger.info("unregistering node...")
 
         try:
-            self._send_message(
-                {"cmd": "unregister", "advertised_hostname": self.advertised_hostname}
-            )
+            self._send_message(messaging.unregister_message(self.advertised_hostname))
         except Exception:
             pass
 
@@ -93,7 +98,7 @@ class Node:
         self.master.close()
 
     def handle_message(self, msg):
-        print(msg)
+        pp.pprint(msg)
 
     def run(self):
         self.logger.info("starting fogmsg node...")
@@ -110,9 +115,7 @@ class Node:
         self.reconnect()
 
         # wait for registration at master
-        self.msg_queue.enqueue(
-            {"cmd": "register", "advertised_hostname": self.advertised_hostname}
-        )
+        self.msg_queue.enqueue(messaging.register_message(self.advertised_hostname))
 
         self.running = True
 
@@ -126,12 +129,9 @@ class Node:
                         continue
 
                     self.msg_queue.enqueue(
-                        {
-                            "cmd": "publish",
-                            "sensor": sensor.name(),
-                            "payload": payload,
-                            "origin": self.advertised_hostname,
-                        }
+                        messaging.publish_message(
+                            self.advertised_hostname, sensor.name(), payload
+                        )
                     )
 
                 self.try_send_messages()

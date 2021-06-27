@@ -1,3 +1,4 @@
+from fogmsg.utils import messaging
 import threading
 from typing import Dict
 
@@ -95,7 +96,8 @@ class Master:
             if self.socket.poll(1000) == 0:
                 continue
 
-            msg = self.socket.recv_json()
+            orig_msg = self.socket.recv()
+            msg = messaging.deserialize(orig_msg)
 
             if msg["cmd"] == "register":
                 self.register_node(msg["advertised_hostname"])
@@ -104,9 +106,9 @@ class Master:
             elif msg["cmd"] == "publish":
                 origin = msg.get("origin", None)
                 self.persist(msg)
-                self.send_to_all(msg, exclude=origin)
+                self.send_to_all(orig_msg, exclude=origin)
 
                 if origin and not self.is_node_registered(origin):
                     self.register_node(origin)
 
-            self.socket.send_json("ack")
+            self.socket.send(messaging.ack_message())

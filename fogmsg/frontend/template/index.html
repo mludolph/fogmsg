@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8" />
-  <title>Creating Real-Time Charts with Flask</title>
+  <title>fogmsg Dashboard</title>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet" />
   <link href="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.css" rel="stylesheet" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
@@ -94,16 +94,6 @@
         return color;
       }
 
-      /**
-            <
-            div class = "card" >
-              <
-              div class = "card-body" >
-              <
-              canvas id = "canvas" > < /canvas> < /
-            div > <
-              /div>**/
-
       const wrapper = document.getElementById("metrics-wrapper");
       const configs = {}
       const lineCharts = {}
@@ -144,20 +134,6 @@
           };
         }
       })
-      /*
-      BASECOORDS = [-13.9626, 33.7741];
-
-      function makeMap() {
-        var TILE_URL = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
-        var MB_ATTR = 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors';
-        mymap = L.map('llmap').setView(BASECOORDS, 8);
-        L.tileLayer(TILE_URL, {
-          attribution: MB_ATTR
-        }).addTo(mymap);
-      }
-
-      var layer = L.layerGroup();
-      makeMap();*/
     });
   </script>
 </body>

@@ -4,3 +4,7 @@ class NoAcknowledgementError(RuntimeError):
 
 class NotRegisteredError(RuntimeError):
     pass
+
+
+class InvalidMessageFormat(ValueError):
+    pass

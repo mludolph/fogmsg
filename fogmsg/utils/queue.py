@@ -1,5 +1,5 @@
 from collections import deque
-from typing import Optional
+from typing import Any, Optional
 import shelve
 import threading
 
@@ -19,7 +19,7 @@ class MessageQueue:
         if self._shelve:
             self._shelve["queue"] = self._q
 
-    def enqueue(self, msg: dict) -> bool:
+    def enqueue(self, msg: Any) -> bool:
         with self._lock:
             if len(self._q) >= self.max_size:
                 return False
@@ -28,7 +28,7 @@ class MessageQueue:
             self._save()
             return True
 
-    def dequeue(self) -> Optional[dict]:
+    def dequeue(self) -> Optional[Any]:
         with self._lock:
             if len(self._q) == 0:
                 return None
@@ -37,7 +37,7 @@ class MessageQueue:
             self._save()
             return obj
 
-    def peek(self) -> Optional[dict]:
+    def peek(self) -> Optional[Any]:
         with self._lock:
             if len(self._q) == 0:
                 return None
