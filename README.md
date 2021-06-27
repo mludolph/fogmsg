@@ -15,6 +15,7 @@ by Moritz Ludolph, Maximilian Bähnisch and Maher Shukur
     - [Messaging](#messaging)
       - [Message Format](#message-format)
     - [REST interface and GUI](#rest-interface-and-gui)
+  - [Source Code structure](#source-code-structure)
   - [Demo Video](#demo-video)
   - [License](#license)
 
@@ -198,6 +199,14 @@ The master also contains a simple REST interface based on the Pyhton library `fl
   ...
 ]
 ```
+
+## Source Code structure
+
+- [fogmsg/executables](fogmsg/executables): runnable python scripts for Master, Node and Sensor
+- [fogmsg/frontend](fogmsg/frontend): Master REST API and Dashboard
+- [fogmsg/master](fogmsg/master): Master, SenderThread and Persistence
+- [fogmsg/node](fogmsg/node): Node, ReceiverThread, Sensor and Data Genration
+- [fogmsg/utils](fogmsg/utils): Persistent Message Queue, Message Serialization and Logging
 
 ## Demo Video
 
