@@ -68,13 +68,17 @@ def get_last_data(sensor_id, type):
     time.sleep(1)
 
     while True:
-        msg = db.get_last_messages(sensor_id, type)[0]
-        if last_timestamp < msg["time"]:
-            ts = datetime.utcfromtimestamp(msg["time"]).strftime("%Y-%m-%d %H:%M:%S")
-            last_timestamp = msg["time"]
-            del msg["time"]
-            json_data = json.dumps({"time": ts, "id": sensor_id, **msg})
-            yield f"data:{json_data}\n\n"
+        msgs = db.get_last_messages(sensor_id, type)
+        if msgs:
+            msg = msgs[0]
+            if last_timestamp < msg["time"]:
+                ts = datetime.utcfromtimestamp(msg["time"]).strftime(
+                    "%Y-%m-%d %H:%M:%S"
+                )
+                last_timestamp = msg["time"]
+                del msg["time"]
+                json_data = json.dumps({"time": ts, "id": sensor_id, **msg})
+                yield f"data:{json_data}\n\n"
 
         time.sleep(1)
 
