@@ -26,6 +26,7 @@ For this, simulated GPS and device metrics are broadcasted to all connected egde
 The project is implemented using Python and makes heavy use of the ZeroMQ library to provide **atleast-once** message delivery garantuee.
 
 <div style="page-break-after:always;"></div>
+
 ## Architecture Overview
 
 | ![Architecture](docs/images/arch.png) |
