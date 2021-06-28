@@ -16,6 +16,7 @@ by Moritz Ludolph, Maximilian Bähnisch and Maher Shukur
       - [Message Format](#message-format)
     - [REST interface and GUI](#rest-interface-and-gui)
   - [Source Code structure](#source-code-structure)
+  - [Assignment Requirements](#assignment-requirements)
   - [Demo Video](#demo-video)
   - [License](#license)
 
@@ -64,6 +65,7 @@ $ docker-compose -f docker-compose.node.yml up -d
 Please note that the environment variables might have to be changed to fit a specific setup (i.e. `MASTER_HOSTNAME` and `NODE_ADVERTISED_LISTENER`).
 
 <div style="page-break-after:always;"></div>
+
 **Master Arguments/Environment variables**:
 
 ```bash
@@ -168,9 +170,14 @@ When using the quickstart scripts or docker containers, both sensors are deploye
 ### Master
 
 The **_master node_** receives all incoming messages and creates _sender_ threads for each new connection to an edge node.
-Upon receiving a sensor event, the message can then be broadcast to all previously registered nodes.
+Upon receiving a sensor event, the message can then be broadcast to all previously registered nodes or handled on the master.
 For each of the senders, a seperate message queue is used, thus garantueeing reliable messaging for multiple clients.
 As before, the master also only considers messages as delivered when acknowledged by a client.
+
+The master broadcasts all **gps** messages to other nodes, to demonstrate reliable messaging between multiple nodes.
+For the **metrics** messages, the master checks it against a given threshold (for demo purposes set at 25%, see `fogmsg/master/config`) and returns control messages to THROTTLE or NOTHROTTLE back to the device.
+This demos the capabilities this message framework can have, while being limitted to only mocked/simulated sensors (and no actuators).
+A simple script is included at `fogmsg/scripts/stress_cpu.sh` to simulate CPU load.
 
 The master additionally offers and [**REST** interface and **GUI**](#rest-interface-and-gui) to monitor metrics published by the nodes.
 For this, all received messages are persisted to a _sqlite_ database, which could easily be replaced by a more specialized database solution (e.g. a TimescaleDB).
@@ -231,6 +238,15 @@ The master also contains a simple REST interface based on the Pyhton library `fl
 - [fogmsg/master](fogmsg/master): Master, SenderThread and Persistence
 - [fogmsg/node](fogmsg/node): Node, ReceiverThread, Sensor and Data Genration
 - [fogmsg/utils](fogmsg/utils): Persistent Message Queue, Message Serialization and Logging
+
+## Assignment Requirements
+
+We fulfill all requirements as stated in the assignment:
+
+1. 1 local and 1 cloud component: Node, Master
+2. 2 virtual sensors: GPS and Metrics sensor
+3. transmitted regularly between components: Node sends sensors data, Master sends ack's, broadcasts and control messages
+4. failure tolerant: persistent message queues and atleasts once delivery garantuee
 
 ## Demo Video
 

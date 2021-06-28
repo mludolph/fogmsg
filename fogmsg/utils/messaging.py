@@ -6,6 +6,7 @@ _REG = "1"
 _UNREG = "2"
 _ACK = "3"
 _PUB = "4"
+_CTRL = "5"
 
 # payload types
 _PAYLOAD_METRICS = "1"
@@ -25,6 +26,10 @@ def register_message(advertised_hostname: str) -> bytes:
 
 def unregister_message(advertised_hostname: str) -> bytes:
     return _SEPERATOR.join([_UNREG, advertised_hostname]).encode("utf-8")
+
+
+def control_message(action: str) -> bytes:
+    return _SEPERATOR.join([_CTRL, action]).encode("utf-8")
 
 
 def publish_message(origin: str, sensor: str, payload: dict) -> bytes:
@@ -75,6 +80,8 @@ def deserialize(msg: bytes) -> Union[dict, str]:
         return {"cmd": "unregister", "advertised_hostname": parts[1]}
     elif cmd == _ACK:
         return "ack"
+    elif cmd == _CTRL:
+        return {"cmd": "control", "action": parts[1]}
     elif cmd == _PUB:
         origin = parts[1]
         type = parts[2]

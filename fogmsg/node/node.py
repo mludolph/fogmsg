@@ -98,7 +98,11 @@ class Node:
         self.master.close()
 
     def handle_message(self, msg):
-        pp.pprint(msg)
+        if msg["cmd"] == "publish":
+            self.logger.info(f"DATA: {msg['sensor']}@{msg['origin']}")
+            pp.pprint(msg)
+        elif msg["cmd"] == "control":
+            self.logger.info(f"CONTROL: {msg['action']}")
 
     def run(self):
         self.logger.info("starting fogmsg node...")

@@ -48,6 +48,7 @@ class NodeReceiver(threading.Thread):
             msg = messaging.deserialize(msg)
             self.socket.send(messaging.ack_message())
 
-            if msg and msg["cmd"] == "publish":
-                self.logger.info(f"messsage from {msg['origin']}:")
-                self.message_callback(msg)
+            if not msg:
+                continue
+
+            self.message_callback(msg)

@@ -66,6 +66,13 @@ class Master:
                 if not exclude or advertised_hostname not in exclude:
                     sender.enqueue(msg)
 
+    def send_to_one(self, msg, receiver: str):
+        with self.nodes_lock:
+            if receiver not in self.nodes:
+                self.logger.critical("tried sending to unknown receiver")
+                return
+            self.nodes[receiver].enqueue(msg)
+
     def join(self):
         self.running = False
         self.logger.debug("shutting down master...")
@@ -80,6 +87,25 @@ class Master:
         self.logger.info("closing db")
         self.db.close()
         self.logger.info("master shut down")
+
+    def handle_message(self, msg, orig_msg):
+        origin = msg.get("origin", None)
+        # handle non registered nodes
+        if origin and not self.is_node_registered(origin):
+            self.register_node(origin)
+
+        # persist all messages
+        self.persist(msg)
+
+        # broadcast gps location to all other nodes
+        if msg.get("sensor", None) == "gps":
+            self.send_to_all(orig_msg, exclude=[origin])
+        elif msg.get("sensor", None) == "metrics":
+            payload = msg.get("payload")
+            if payload["cpu_percent"] > self.config.CPU_PERCENT_THRESHOLD:
+                self.send_to_one(messaging.control_message("THROTTLE"), origin)
+            else:
+                self.send_to_one(messaging.control_message("NOTHROTTLE"), origin)
 
     def run(self):
         self.logger.debug("starting fogmsg master...")
@@ -104,11 +130,6 @@ class Master:
             elif msg["cmd"] == "unregister":
                 self.unregister_node(msg["advertised_hostname"])
             elif msg["cmd"] == "publish":
-                origin = msg.get("origin", None)
-                self.persist(msg)
-                self.send_to_all(orig_msg, exclude=origin)
-
-                if origin and not self.is_node_registered(origin):
-                    self.register_node(origin)
+                self.handle_message(msg, orig_msg)
 
             self.socket.send(messaging.ack_message())

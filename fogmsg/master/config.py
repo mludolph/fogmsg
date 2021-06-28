@@ -6,3 +6,4 @@ class MasterConfig:
         self.SENDER_QUEUE_LENGTH = args.sender_queue_length
         self.SENDER_TIMEOUT = args.sender_timeout
         self.UI_PORT = args.ui_port
+        self.CPU_PERCENT_THRESHOLD = 25.0
